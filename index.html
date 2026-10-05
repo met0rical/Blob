@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blob Scorer</title>
+<style>
+:root{--felt:#123a2c;--paper:#f2f5f2;--ink:#14231c;--mut:#5f7268;--line:#d3dcd6;--gold:#e6b93c;--red:#b8322a;--grn:#1d7a4d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--felt);color:var(--paper);font:16px/1.4 system-ui,sans-serif;min-height:100vh}
+#app{max-width:760px;margin:0 auto;padding:16px 14px 48px}
+h1{font:700 2rem Georgia,serif;margin:0}
+h2{font:700 1.15rem Georgia,serif;margin:0 0 10px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px}
+.top span{display:flex;gap:8px}
+.card{background:var(--paper);color:var(--ink);border-radius:10px;padding:14px;margin-bottom:14px}
+.mut{color:var(--mut)}.scroll{overflow-x:auto}
+button,select,input{font:inherit}
+button{border:0;border-radius:8px;padding:10px 16px;background:var(--felt);color:var(--paper);cursor:pointer;min-height:44px}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.ghost{background:transparent;color:var(--paper);border:1px solid #ffffff55;min-height:36px;padding:6px 12px}
+button.cg{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.go{background:var(--gold);color:#2a2100;font-weight:700;width:100%}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;margin-top:6px;background:#fff;color:var(--ink);min-height:44px}
+label{display:block;margin-top:10px;font-size:.9rem;color:var(--mut)}
+label.chk{display:flex;gap:8px;align-items:center;color:var(--ink)}label.chk input{width:auto;margin:0;min-height:0}
+.seg{display:flex;gap:6px;margin-bottom:6px}.seg button{flex:1;background:#fff;color:var(--ink);border:1px solid var(--line)}.seg button.on{background:var(--felt);color:var(--paper);border-color:var(--felt)}
+table{border-collapse:collapse;width:100%;text-align:center}
+th,td{padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td small{display:block;font-size:.72rem}
+td.ok{color:var(--grn);font-weight:600}td.bad{color:var(--red)}
+tfoot th{font:700 1.3rem Georgia,serif;border-bottom:0}
+.dl{background:var(--gold);color:#2a2100;border-radius:50%;font-size:.7rem;padding:1px 5px;vertical-align:middle}
+.row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+.row:last-of-type{border-bottom:0}
+.step{display:flex;align-items:center;gap:10px}.step button{width:44px;padding:0;font-size:1.3rem}
+.step b{font:700 1.6rem Georgia,serif;min-width:34px;text-align:center}
+.warn{color:var(--red);font-weight:600}.rank{font:700 1.1rem Georgia,serif}
+.big{font:700 2.4rem Georgia,serif}
+.trump{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.trump i{font:normal 2.6rem/1 Georgia,serif}.su{color:var(--ink)}.su.r{color:var(--red)}
+#auth{max-width:760px;margin:0 auto;padding:10px 14px 0;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:.9rem}#auth:empty{display:none}
+#foot{max-width:760px;margin:0 auto;padding:0 14px 24px;text-align:center;font-size:.65rem;color:#ffffffb3}#foot a{color:inherit}
+</style></head><body><div id="auth"></div><div id="app"></div>
+<footer id="foot"><a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Service</a></footer>
+<script>
+const K='blob-scorer-v2',KH='blob-scorer-history-v1',$app=document.getElementById('app');
+const ld=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+let S=ld(K),H=ld(KH)||[],view='main',setup={n:4,names:[],max:null,pat:'d',ts:0,nt:false,hook:true};
+const lsS=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const lsH=()=>{try{localStorage.setItem(KH,JSON.stringify(H))}catch(e){}};
+const save=()=>{lsS();sync()},saveH=()=>{lsH();sync()};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const SU=[{n:'Clubs',s:'♣'},{n:'Diamonds',s:'♦',r:1},{n:'Hearts',s:'♥',r:1},{n:'Spades',s:'♠'}];
+const SUN=[...SU,{n:'No trump',s:'∅'}];
+const cycle=()=>{const L=S.cfg.nt?5:4,f=SUN.slice(0,L);return f.map((_,k)=>f[(S.cfg.ts+k)%L])};
+const tr=r=>{const c=cycle();return c[r%c.length]};
+const limFor=n=>Math.floor(51/n),defMax=n=>Math.min(10,limFor(n));
+function seq(m,p){const d=[];for(let i=m;i>=1;i--)d.push(i);const u=[...d].reverse();
+ return p=='du'?[...d,...u.slice(1)]:p=='ud'?[...u,...d.slice(1)]:p=='d'?d:u}
+const sc=(b,w)=>b==w?1:0;
+const tot=(i,hist=S.hist)=>hist.reduce((a,h)=>a+sc(h.bids[i],h.won[i]),0);
+const tw=(i,hist=S.hist)=>hist.reduce((a,h)=>a+(h.bids[i]==h.won[i]?h.won[i]:0),0);
+const sum=a=>a.reduce((x,y)=>x+y,0);
+const render=()=>view=='hist'?rHist():S?rGame():rSetup();
+const names=()=>[...new Set(H.flatMap(g=>g.players))];
+
+function rSetup(){
+ const lim=limFor(setup.n),m=Math.min(setup.max??defMax(setup.n),lim);
+ const opt=(v,t,c)=>`<option value="${v}"${c==v?' selected':''}>${t}</option>`;
+ $app.innerHTML=`<div class=top><h1>Blob</h1><button class=ghost onclick="view='hist';render()">History</button></div>
+ <datalist id=pn>${names().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+ <div class=card><h2>Players</h2><div class=seg>${[2,3,4,5,6].map(k=>`<button class="${k==setup.n?'on':''}" onclick="setN(${k})">${k}</button>`).join('')}</div>
+ ${Array.from({length:setup.n},(_,i)=>`<input list=pn aria-label="Player ${i+1} name" placeholder="Player ${i+1}" value="${esc(setup.names[i]||'')}" oninput="setup.names[${i}]=this.value">`).join('')}
+ <p class=mut style="margin:8px 0 0;font-size:.85rem">List players in seating order. The first player deals round 1 and the deal moves left. Use the same spelling each game so wins add up in History.</p></div>
+ <div class=card><h2>Rounds</h2>
+ <label>Most cards dealt (1–${lim})<input type=number min=1 max=${lim} value=${m} onchange="setup.max=Math.max(1,Math.min(${lim},+this.value||1));rSetup()"></label>
+ <label>Order<select onchange="setup.pat=this.value">${opt('d',`${m} down to 1`,setup.pat)}${opt('du',`${m} down to 1, then back up`,setup.pat)}${opt('u','1 up to '+m,setup.pat)}${opt('ud',`1 up to ${m}, then back down`,setup.pat)}</select></label>
+ <label>Trump for round 1<select onchange="setup.ts=+this.value">${SUN.slice(0,setup.nt?5:4).map((s,i)=>`<option value="${i}"${setup.ts==i?' selected':''} style="color:${s.r?'#b8322a':'#14231c'}">${s.s} ${s.n}</option>`).join('')}</select></label>
+ <label class=chk><input type=checkbox ${setup.nt?'checked':''} onchange="setup.nt=this.checked;if(!setup.nt&&setup.ts>3)setup.ts=0;rSetup()"> Add a no-trump round to the cycle</label>
+ <p class=mut style="margin:4px 0 0;font-size:.85rem">Trump runs ♣ ♦ ♥ ♠ then no trump (if included), starting from your choice above, and repeats.</p>
+ <label class=chk><input type=checkbox ${setup.hook?'checked':''} onchange="setup.hook=this.checked"> Total bids can't equal the tricks dealt</label></div>
+ <button class=go onclick="start()">Start game</button>`}
+function setN(n){setup.n=n;if(setup.max>limFor(n))setup.max=limFor(n);rSetup()}
+function mk(players,cards,cfg){const n=players.length;
+ return{players,cfg,cards,hist:[],r:0,phase:'bid',bids:Array(n).fill(0),won:Array(n).fill(0),rec:null}}
+function start(){
+ const n=setup.n,m=Math.min(setup.max??defMax(n),limFor(n));
+ S=mk(Array.from({length:n},(_,i)=>(setup.names[i]||'').trim()||'Player '+(i+1)),seq(m,setup.pat),{hook:setup.hook,ts:setup.ts,nt:setup.nt});
+ save();render()}
+function rematch(){S=mk(S.players,S.cards,S.cfg);save();render()}
+
+function rGame(){
+ const n=S.players.length,r=S.r,fin=r>=S.cards.length,dealer=r%n;
+ let h=`<div class=top><h1>Blob</h1><span><button class=ghost onclick="view='hist';render()">History</button><button class=ghost onclick="reset()">New game</button></span></div>
+ <div class="card scroll"><table><thead><tr><th>Cards</th>${S.players.map((p,i)=>`<th>${esc(p)}${!fin&&i==dealer?' <span class=dl title=Dealer>D</span>':''}</th>`).join('')}</tr></thead><tbody>`;
+ S.hist.forEach((x,k)=>{const t=tr(k);h+=`<tr><td class=mut>${x.cards} <span class="su ${t.r?'r':''}">${t.s}</span></td>${x.bids.map((b,i)=>{const ok=b==x.won[i];return `<td class="${ok?'ok':'bad'}">${b} / ${x.won[i]}<small>${ok?'1':'blob'}</small></td>`}).join('')}</tr>`});
+ if(!S.hist.length)h+=`<tr><td colspan=${n+1} class=mut>Rounds appear here as bid / won.</td></tr>`;
+ h+=`</tbody><tfoot><tr><th>Total</th>${S.players.map((_,i)=>`<th>${tot(i)}</th>`).join('')}</tr><tr><td class=mut>Scored tricks</td>${S.players.map((_,i)=>`<td class=mut>${tw(i)}</td>`).join('')}</tr></tfoot></table></div>`;
+ if(fin){
+  const rk=S.players.map((p,i)=>({p,t:tot(i),w:tw(i)})).sort((a,b)=>b.t-a.t||b.w-a.w),ws=rk.filter(x=>x.t==rk[0].t&&x.w==rk[0].w),tp=rk.filter(x=>x.t==rk[0].t).length;
+  h+=`<div class=card><div class=mut>${ws.length>1?'Tied winners':'Winner'}</div><div class=big>${ws.map(x=>esc(x.p)).join(' & ')}</div>
+  ${rk.map((x,k)=>`<div class=row><span class=rank>${k+1}. ${esc(x.p)}</span><span><b>${x.t}</b> <span class=mut>· ${x.w} tricks</span></span></div>`).join('')}
+  ${tp>ws.length?'<p class=mut style="margin:8px 0 0">Level on blobs, so most tricks won in scored rounds decides.</p>':''}<p class=mut style="margin:8px 0 0">Saved to History.</p></div><button class=go onclick="rematch()">Play again with the same players</button>`;
+ }else{
+  const bid=S.phase=='bid',arr=bid?S.bids:S.won,cards=S.cards[r],s=sum(arr),t=tr(r);
+  const order=[...Array(n).keys()].map(k=>(dealer+1+k)%n);
+  h+=`<div class=card><h2>Round ${r+1} of ${S.cards.length}: ${cards} card${cards>1?'s':''}</h2>
+  <div class=trump><i class="su ${t.r?'r':''}" aria-hidden=true>${t.s}</i><b>Trump: ${t.n}</b></div>
+  <p class=mut style="margin:0 0 6px">${bid?`Enter each nomination, starting left of the dealer (${esc(S.players[dealer])}, who bids last).`:'Enter the tricks each player won.'}</p>
+  ${order.map(i=>`<div class=row><span>${esc(S.players[i])}${!bid?` <span class=mut>bid ${S.bids[i]}</span>`:''}</span>
+  <span class=step><button class=cg aria-label="Fewer for ${esc(S.players[i])}" onclick="bump(${i},-1)">−</button><b>${arr[i]}</b><button class=cg aria-label="More for ${esc(S.players[i])}" onclick="bump(${i},1)">+</button></span></div>`).join('')}
+  <p style="margin:10px 0">${bid?`Bids total <b>${s}</b> for <b>${cards}</b> tricks`:`Tricks entered <b>${s}</b> of <b>${cards}</b>`}${
+   bid&&S.cfg.hook&&s==cards?` <span class=warn>The dealer must change the last bid.</span>`:''}${
+   !bid&&s!=cards?` <span class=warn>Must add up to ${cards}.</span>`:''}</p>
+  ${bid?`<button class=go ${S.cfg.hook&&s==cards?'disabled':''} onclick="lock()">Start play</button>`
+       :`<button class=go ${s!=cards?'disabled':''} onclick="finish()">Score round</button><button class=cg style="width:100%;margin-top:8px" onclick="S.phase='bid';save();render()">Edit bids</button>`}</div>`;
+ }
+ if(S.hist.length)h+=`<button class=ghost onclick="undo()">Undo last round</button>`;
+ $app.innerHTML=h}
+function bump(i,d){const a=S.phase=='bid'?S.bids:S.won;a[i]=Math.max(0,Math.min(S.cards[S.r],a[i]+d));save();render()}
+function lock(){S.phase='play';S.won=[...S.bids];save();render()}
+function finish(){S.hist.push({cards:S.cards[S.r],bids:[...S.bids],won:[...S.won]});S.r++;S.phase='bid';
+ S.bids=Array(S.players.length).fill(0);S.won=[...S.bids];
+ if(S.r>=S.cards.length){const t=S.players.map((_,i)=>tot(i)),w=S.players.map((_,i)=>tw(i)),top=Math.max(...t),
+   c=t.map((v,i)=>v==top?i:-1).filter(i=>i>=0),bw=Math.max(...c.map(i=>w[i]));
+  S.rec=Date.now();H.push({id:S.rec,date:new Date().toISOString(),players:[...S.players],totals:t,tricks:w,winners:c.filter(i=>w[i]==bw),rounds:S.cards.length});saveH()}
+ save();render()}
+function undo(){if(S.rec){H=H.filter(g=>g.id!=S.rec);S.rec=null;saveH()}
+ const x=S.hist.pop();S.r--;S.phase='play';S.bids=x.bids;S.won=x.won;save();render()}
+function reset(){if(confirm('Discard this game and start a new one?')){S=null;lsS();sync();render()}}
+
+function rHist(){
+ const m={};H.forEach(g=>g.players.forEach((p,i)=>{const o=m[p.toLowerCase()]||(m[p.toLowerCase()]={name:p,g:0,w:0,pts:0});o.g++;o.pts+=g.totals[i];if(g.winners.includes(i))o.w++}));
+ const st=Object.values(m).sort((a,b)=>b.w-a.w||a.g-b.g||b.pts-a.pts);
+ let h=`<div class=top><h1>History</h1><button class=ghost onclick="view='main';render()">Back</button></div>`;
+ if(!H.length)h+=`<div class=card><p style="margin:0">No finished games yet. A game is saved here when its last round is scored.</p></div>`;
+ else{
+  h+=`<div class="card scroll"><h2>Wins by player</h2><table><thead><tr><th>Player</th><th>Wins</th><th>Games</th><th>Win %</th><th>Points</th></tr></thead><tbody>
+  ${st.map(o=>`<tr><td>${esc(o.name)}</td><td><b>${o.w}</b></td><td>${o.g}</td><td>${Math.round(100*o.w/o.g)}%</td><td>${o.pts}</td></tr>`).join('')}</tbody></table>
+  <p class=mut style="margin:8px 0 0;font-size:.85rem">Ties on points are decided by most tricks won in scored rounds. A game still level after that counts as a win for each tied player.</p></div>
+  <div class=card><h2>Games</h2>${[...H].reverse().map(g=>`<div class=row><span><b>${g.winners.map(i=>esc(g.players[i])).join(' & ')}</b> won<br><small class=mut>${new Date(g.date).toLocaleDateString()} · ${g.players.map((p,i)=>esc(p)+' '+g.totals[i]).join(', ')}</small></span>
+  <button class=cg aria-label="Delete this game" onclick="delG(${+g.id})">✕</button></div>`).join('')}</div>
+  <button class=ghost onclick="clearH()">Clear all history</button>`}
+ $app.innerHTML=h}
+function delG(id){if(confirm('Delete this game from History?')){H=H.filter(g=>g.id!=id);saveH();render()}}
+function clearH(){if(confirm('Delete all saved games? This can\'t be undone.')){H=[];saveH();render()}}
+
+let U=null,CID='',syncT=null;
+async function api(m,u,b){
+ const r=await fetch(u,{method:m,headers:b!==undefined?{'Content-Type':'application/json'}:{},body:b!==undefined?JSON.stringify(b):undefined,credentials:'same-origin'});
+ if(r.status===401&&U){U=null;authUI()}
+ if(!r.ok)throw new Error(r.status);return r.json()}
+const setSt=t=>{const e=document.getElementById('sst');if(e)e.textContent=t};
+const push=()=>api('PUT','/api/data',{history:H,game:S});
+function sync(){if(!U)return;setSt('Saving…');clearTimeout(syncT);
+ syncT=setTimeout(()=>push().then(()=>setSt('Saved')).catch(()=>setSt('Not saved. Will retry on the next change.')),400)}
+async function pull(merge){
+ const d=await api('GET','/api/data');
+ if(merge){const ids=new Set(d.history.map(g=>g.id));H=[...d.history,...H.filter(g=>!ids.has(g.id))].sort((a,b)=>a.id-b.id);if(d.game||!S)S=d.game}
+ else{H=d.history;S=d.game}
+ lsS();lsH();if(merge)sync();render()}
+function authUI(){
+ const a=document.getElementById('auth');
+ if(!CID){a.innerHTML='';return}
+ if(U)a.innerHTML=`<span>Signed in as <b>${esc(U.name||U.email)}</b> <span id=sst class=mut></span></span><button class=ghost onclick="logout()">Sign out</button>`;
+ else{a.innerHTML=`<span>Sign in to keep games and History on the server.</span><span id=gbtn></span>`;
+  if(window.google&&google.accounts)google.accounts.id.renderButton(document.getElementById('gbtn'),{theme:'outline',size:'medium'})}}
+async function onCred(r){
+ try{U=(await api('POST','/api/login',{credential:r.credential})).user;await pull(true);authUI()}
+ catch(e){alert('Sign-in failed. Check that this Google account is allowed to use the app.')}}
+async function logout(){
+ clearTimeout(syncT);try{await push()}catch(e){}try{await api('POST','/api/logout',{})}catch(e){}
+ U=null;S=null;H=[];lsS();lsH();view='main';authUI();render()}
+render();
+(async()=>{
+ try{CID=(await api('GET','/api/config')).clientId||''}catch(e){}
+ if(!CID)return;
+ try{U=(await api('GET','/api/me')).user;if(U)await pull(false)}catch(e){}
+ authUI();
+ const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;
+ s.onload=()=>{google.accounts.id.initialize({client_id:CID,callback:onCred});authUI()};
+ document.head.appendChild(s)})();
+</script></body></html>
