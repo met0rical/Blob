@@ -2,45 +2,56 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Blob Scorer</title>
+<meta name="theme-color" content="#123a2c">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23123a2c'/%3E%3Ctext x='50' y='74' font-size='70' text-anchor='middle' fill='%23e6b93c'%3E%E2%99%A0%3C/text%3E%3C/svg%3E">
 <style>
-:root{--felt:#123a2c;--paper:#f2f5f2;--ink:#14231c;--mut:#5f7268;--line:#d3dcd6;--gold:#e6b93c;--red:#b8322a;--grn:#1d7a4d}
+:root{--felt:#123a2c;--felt2:#0b2a20;--paper:#f4f7f4;--ink:#14231c;--mut:#5f7268;--line:#d6e0d9;--gold:#e6b93c;--gold2:#a9780f;--red:#b8322a;--grn:#1d7a4d;--serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif}
 *{box-sizing:border-box}
-body{margin:0;background:var(--felt);color:var(--paper);font:16px/1.4 system-ui,sans-serif;min-height:100vh}
-#app{max-width:760px;margin:0 auto;padding:16px 14px 48px}
-h1{font:700 2rem Georgia,serif;margin:0}
-h2{font:700 1.15rem Georgia,serif;margin:0 0 10px}
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px}
-.top span{display:flex;gap:8px}
-.card{background:var(--paper);color:var(--ink);border-radius:10px;padding:14px;margin-bottom:14px}
+body{margin:0;color:var(--paper);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh;
+background:radial-gradient(120% 80% at 50% -10%,#21614a 0%,var(--felt) 50%,var(--felt2) 100%) fixed,repeating-linear-gradient(45deg,#ffffff07 0 2px,transparent 2px 16px);background-color:var(--felt2)}
+#app{max-width:760px;margin:0 auto;padding:12px 14px 40px}
+h1{font:700 2.1rem/1 var(--serif);margin:0;color:var(--gold);letter-spacing:.02em;text-shadow:0 2px 0 #0006}
+h1::before{content:"♠";font-size:.7em;margin-right:.4em;color:var(--paper);opacity:.9}
+h2{font:700 1.2rem var(--serif);margin:0 0 10px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px}.top span{display:flex;gap:8px}
+.card{background:linear-gradient(#f9fbf9,var(--paper));color:var(--ink);border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 1px 0 #fff inset,0 10px 28px #0000004d,0 2px 4px #0003}
+.round{border-top:5px solid var(--gold)}
 .mut{color:var(--mut)}.scroll{overflow-x:auto}
 button,select,input{font:inherit}
-button{border:0;border-radius:8px;padding:10px 16px;background:var(--felt);color:var(--paper);cursor:pointer;min-height:44px}
+button{border:0;border-radius:10px;padding:10px 16px;background:var(--felt);color:var(--paper);cursor:pointer;min-height:44px;transition:filter .15s,transform .05s}
+button:hover:not(:disabled){filter:brightness(1.15)}button:active:not(:disabled){transform:translateY(1px)}
 button:disabled{opacity:.4;cursor:not-allowed}
-button.ghost{background:transparent;color:var(--paper);border:1px solid #ffffff55;min-height:36px;padding:6px 12px}
-button.cg{background:transparent;color:var(--ink);border:1px solid var(--line)}
-button.go{background:var(--gold);color:#2a2100;font-weight:700;width:100%}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;margin-top:6px;background:#fff;color:var(--ink);min-height:44px}
-label{display:block;margin-top:10px;font-size:.9rem;color:var(--mut)}
+button.ghost{background:#ffffff12;color:var(--paper);border:1px solid #ffffff40;min-height:36px;padding:6px 14px;border-radius:999px;font-size:.9rem}
+button.cg{background:#fff;color:var(--ink);border:1px solid var(--line)}
+button.go{background:linear-gradient(#f2cd5a,var(--gold));color:#2a2100;font-weight:700;width:100%;min-height:50px;letter-spacing:.03em;box-shadow:0 2px 0 var(--gold2),0 8px 16px #0003}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;box-shadow:0 0 0 1px var(--felt)}
+input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-top:8px;background:#fff;color:var(--ink);min-height:44px}
+label{display:block;margin-top:12px;font-size:.9rem;color:var(--mut)}
 label.chk{display:flex;gap:8px;align-items:center;color:var(--ink)}label.chk input{width:auto;margin:0;min-height:0}
-.seg{display:flex;gap:6px;margin-bottom:6px}.seg button{flex:1;background:#fff;color:var(--ink);border:1px solid var(--line)}.seg button.on{background:var(--felt);color:var(--paper);border-color:var(--felt)}
-table{border-collapse:collapse;width:100%;text-align:center}
-th,td{padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.seg{display:flex;gap:8px;margin-bottom:6px}.seg button{flex:1;background:#fff;color:var(--ink);border:1px solid var(--line);font:700 1.15rem var(--serif)}.seg button.on{background:var(--felt);color:var(--gold);border-color:var(--felt)}
+table{border-collapse:separate;border-spacing:0;width:100%;text-align:center;font-variant-numeric:tabular-nums}
+th,td{padding:9px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+thead th{background:var(--felt);color:var(--paper);font-weight:600}
+thead th:first-child{border-top-left-radius:10px}thead th:last-child{border-top-right-radius:10px}
 th:first-child,td:first-child{text-align:left}
-td small{display:block;font-size:.72rem}
-td.ok{color:var(--grn);font-weight:600}td.bad{color:var(--red)}
-tfoot th{font:700 1.3rem Georgia,serif;border-bottom:0}
-.dl{background:var(--gold);color:#2a2100;border-radius:50%;font-size:.7rem;padding:1px 5px;vertical-align:middle}
-.row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+tbody tr:nth-child(even) td{background:#00000007}
+td small{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em}
+td.ok{color:var(--grn);font-weight:600;background:#e2f2e9!important}td.bad{color:var(--red);background:#f9e8e6!important}
+tfoot th{font:700 1.4rem var(--serif);border-bottom:0;border-top:2px solid var(--ink);padding-top:10px}tfoot td{border-bottom:0}
+.dl{background:var(--gold);color:#2a2100;border-radius:50%;font-size:.7rem;font-weight:700;padding:1px 6px;vertical-align:middle}
+.row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);gap:10px}
 .row:last-of-type{border-bottom:0}
-.step{display:flex;align-items:center;gap:10px}.step button{width:44px;padding:0;font-size:1.3rem}
-.step b{font:700 1.6rem Georgia,serif;min-width:34px;text-align:center}
-.warn{color:var(--red);font-weight:600}.rank{font:700 1.1rem Georgia,serif}
-.big{font:700 2.4rem Georgia,serif}
-.trump{display:flex;align-items:center;gap:10px;margin:0 0 8px}
-.trump i{font:normal 2.6rem/1 Georgia,serif}.su{color:var(--ink)}.su.r{color:var(--red)}
-#auth{max-width:760px;margin:0 auto;padding:10px 14px 0;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:.9rem}#auth:empty{display:none}
+.step{display:flex;align-items:center;gap:6px}.step button{width:46px;height:46px;padding:0;border-radius:50%;font-size:1.4rem;line-height:1}
+.step b{font:700 1.8rem var(--serif);min-width:44px;text-align:center}
+.warn{color:var(--red);font-weight:600}.rank{font:700 1.1rem var(--serif)}
+.big{font:700 2.4rem/1.1 var(--serif);margin:2px 0 8px}.big::before{content:"♛ ";color:var(--gold2)}
+.trump{display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:6px 16px;border:1px solid var(--line);border-radius:12px;background:#fff;width:max-content;max-width:100%}
+.trump i{font:normal 2.4rem/1 var(--serif)}
+.su{color:var(--ink)}.su.r{color:var(--red)}
+#auth{width:calc(100% - 28px);max-width:732px;margin:12px auto 0;padding:8px 12px;background:#00000033;border-radius:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:.9rem}#auth:empty{display:none}
 #foot{max-width:760px;margin:0 auto;padding:0 14px 24px;text-align:center;font-size:.65rem;color:#ffffffb3}#foot a{color:inherit}
+summary{cursor:pointer;padding:6px 0}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head><body><div id="auth"></div><div id="app"></div>
 <footer id="foot"><a href="/privacy">Privacy Policy</a> · <a href="/terms">Terms of Service</a></footer>
 <script>
@@ -105,7 +116,7 @@ function rGame(){
  }else{
   const bid=S.phase=='bid',arr=bid?S.bids:S.won,cards=S.cards[r],s=sum(arr),t=tr(r);
   const order=[...Array(n).keys()].map(k=>(dealer+1+k)%n);
-  h+=`<div class=card><h2>Round ${r+1} of ${S.cards.length}: ${cards} card${cards>1?'s':''}</h2>
+  h+=`<div class="card round"><h2>Round ${r+1} of ${S.cards.length}: ${cards} card${cards>1?'s':''}</h2>
   <div class=trump><i class="su ${t.r?'r':''}" aria-hidden=true>${t.s}</i><b>Trump: ${t.n}</b></div>
   <p class=mut style="margin:0 0 6px">${bid?`Enter each nomination, starting left of the dealer (${esc(S.players[dealer])}, who bids last).`:'Enter the tricks each player won.'}</p>
   ${order.map(i=>`<div class=row><span>${esc(S.players[i])}${!bid?` <span class=mut>bid ${S.bids[i]}</span>`:''}</span>
@@ -131,17 +142,22 @@ function undo(){if(S.rec){H=H.filter(g=>g.id!=S.rec);S.rec=null;saveH()}
 function reset(){if(confirm('Discard this game and start a new one?')){S=null;lsS();sync();render()}}
 
 function rHist(){
- const m={};H.forEach(g=>g.players.forEach((p,i)=>{const o=m[p.toLowerCase()]||(m[p.toLowerCase()]={name:p,g:0,w:0,pts:0});o.g++;o.pts+=g.totals[i];if(g.winners.includes(i))o.w++}));
- const st=Object.values(m).sort((a,b)=>b.w-a.w||a.g-b.g||b.pts-a.pts);
+ const G={};
+ H.forEach(g=>{const k=g.players.map(p=>p.toLowerCase()).sort().join('|');const o=G[k]||(G[k]={games:[],last:0});o.games.push(g);o.last=Math.max(o.last,g.id)});
+ const groups=Object.values(G).sort((a,b)=>b.last-a.last);
  let h=`<div class=top><h1>History</h1><button class=ghost onclick="view='main';render()">Back</button></div>`;
  if(!H.length)h+=`<div class=card><p style="margin:0">No finished games yet. A game is saved here when its last round is scored.</p></div>`;
- else{
-  h+=`<div class="card scroll"><h2>Wins by player</h2><table><thead><tr><th>Player</th><th>Wins</th><th>Games</th><th>Win %</th><th>Points</th></tr></thead><tbody>
+ groups.forEach(gr=>{
+  const m={};
+  gr.games.forEach(g=>g.players.forEach((p,i)=>{const k=p.toLowerCase(),o=m[k]||(m[k]={name:p,g:0,w:0,pts:0});o.g++;o.pts+=g.totals[i];if(g.winners.includes(i))o.w++}));
+  const st=Object.values(m).sort((a,b)=>b.w-a.w||a.g-b.g||b.pts-a.pts),n=gr.games.length;
+  h+=`<div class="card scroll"><h2>${gr.games[n-1].players.map(esc).join(' · ')}</h2>
+  <p class=mut style="margin:-4px 0 8px;font-size:.85rem">${n} game${n>1?'s':''} played by this group</p>
+  <table><thead><tr><th>Player</th><th>Wins</th><th>Games</th><th>Win %</th><th>Points</th></tr></thead><tbody>
   ${st.map(o=>`<tr><td>${esc(o.name)}</td><td><b>${o.w}</b></td><td>${o.g}</td><td>${Math.round(100*o.w/o.g)}%</td><td>${o.pts}</td></tr>`).join('')}</tbody></table>
-  <p class=mut style="margin:8px 0 0;font-size:.85rem">Ties on points are decided by most tricks won in scored rounds. A game still level after that counts as a win for each tied player.</p></div>
-  <div class=card><h2>Games</h2>${[...H].reverse().map(g=>`<div class=row><span><b>${g.winners.map(i=>esc(g.players[i])).join(' & ')}</b> won<br><small class=mut>${new Date(g.date).toLocaleDateString()} · ${g.players.map((p,i)=>esc(p)+' '+g.totals[i]).join(', ')}</small></span>
-  <button class=cg aria-label="Delete this game" onclick="delG(${+g.id})">✕</button></div>`).join('')}</div>
-  <button class=ghost onclick="clearH()">Clear all history</button>`}
+  <details style="margin-top:10px"${groups.length==1?' open':''}><summary class=mut>Games</summary>${[...gr.games].reverse().map(g=>`<div class=row><span><b>${g.winners.map(i=>esc(g.players[i])).join(' & ')}</b> won<br><small class=mut>${new Date(g.date).toLocaleDateString()} · ${g.players.map((p,i)=>esc(p)+' '+g.totals[i]).join(', ')}</small></span>
+  <button class=cg aria-label="Delete this game" onclick="delG(${+g.id})">✕</button></div>`).join('')}</details></div>`});
+ if(H.length)h+=`<p class=mut style="font-size:.85rem;margin:0 0 12px;color:#ffffffb3">Games are grouped by the exact set of players, so wins in one group never count towards another. Ties on points are decided by most tricks won in scored rounds. A game still level after that counts as a win for each tied player.</p><button class=ghost onclick="clearH()">Clear all history</button>`;
  $app.innerHTML=h}
 function delG(id){if(confirm('Delete this game from History?')){H=H.filter(g=>g.id!=id);saveH();render()}}
 function clearH(){if(confirm('Delete all saved games? This can\'t be undone.')){H=[];saveH();render()}}
