@@ -82,16 +82,16 @@ function rSetup(){
  <label class=chk><input type=checkbox ${setup.hook?'checked':''} onchange="setup.hook=this.checked"> Total bids can't equal the tricks dealt</label></div>
  <button class=go onclick="start()">Start game</button>`}
 function setN(n){setup.n=n;if(setup.max>limFor(n))setup.max=limFor(n);rSetup()}
-function mk(players,cards,cfg){const n=players.length;
- return{players,cfg,cards,hist:[],r:0,phase:'bid',bids:Array(n).fill(0),won:Array(n).fill(0),rec:null}}
+function mk(players,cards,cfg,off=0){const n=players.length;
+ return{players,cfg,cards,off,hist:[],r:0,phase:'bid',bids:Array(n).fill(0),won:Array(n).fill(0),rec:null}}
 function start(){
  const n=setup.n,m=Math.min(setup.max??defMax(n),limFor(n));
  S=mk(Array.from({length:n},(_,i)=>(setup.names[i]||'').trim()||'Player '+(i+1)),seq(m,setup.pat),{hook:setup.hook,ts:setup.ts,nt:setup.nt});
  save();render()}
-function rematch(){S=mk(S.players,S.cards,S.cfg);save();render()}
+function rematch(){S=mk(S.players,S.cards,S.cfg,((S.off||0)+S.cards.length)%S.players.length);save();render()}
 
 function rGame(){
- const n=S.players.length,r=S.r,fin=r>=S.cards.length,dealer=r%n;
+ const n=S.players.length,r=S.r,fin=r>=S.cards.length,dealer=((S.off||0)+r)%n;
  let h=`<div class=top><h1>Blob</h1><span><button class=ghost onclick="view='hist';render()">History</button><button class=ghost onclick="reset()">New game</button></span></div>
  <div class="card scroll"><table><thead><tr><th>Cards</th>${S.players.map((p,i)=>`<th>${esc(p)}${!fin&&i==dealer?' <span class=dl title=Dealer>D</span>':''}</th>`).join('')}</tr></thead><tbody>`;
  S.hist.forEach((x,k)=>{const t=tr(k);h+=`<tr><td class=mut>${x.cards} <span class="su ${t.r?'r':''}">${t.s}</span></td>${x.bids.map((b,i)=>{const ok=b==x.won[i];return `<td class="${ok?'ok':'bad'}">${b} / ${x.won[i]}<small>${ok?'1':'blob'}</small></td>`}).join('')}</tr>`});

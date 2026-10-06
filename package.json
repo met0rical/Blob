@@ -1,0 +1,9 @@
+{
+  "name": "blob-scorer",
+  "version": "2.0.0",
+  "private": true,
+  "main": "server.js",
+  "dependencies": {
+    "google-auth-library": "^9.0.0"
+  }
+}

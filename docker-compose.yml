@@ -2,7 +2,7 @@ services:
   blob-scorer:
     build: .
     ports:
-      - "8080:3000"
+      - "8082:3000"
     environment:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       ALLOWED_EMAILS: ${ALLOWED_EMAILS:-}
