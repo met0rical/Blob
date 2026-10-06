@@ -1,8 +1,10 @@
 services:
   blob-scorer:
     build: .
+    image: blob-scorer:latest
+    container_name: blob-scorer
     ports:
-      - "8082:3000"
+      - "${BLOB_PORT:-8082}:3000"
     environment:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       ALLOWED_EMAILS: ${ALLOWED_EMAILS:-}
@@ -10,5 +12,15 @@ services:
     volumes:
       - blob-data:/data
     restart: unless-stopped
+    # To reach the app from a tunnel/proxy container by name (http://blob-scorer:3000),
+    # uncomment this and the networks block below, using that container's network name.
+    # networks:
+    #   - proxy
+
 volumes:
   blob-data:
+
+# networks:
+#   proxy:
+#     external: true
+#     name: your-network-name

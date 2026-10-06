@@ -58,6 +58,7 @@ const readBody = req => new Promise((ok, no) => {
   req.on('error', no);
 });
 
+const legal = require('./legal');
 const page = fs.readFileSync(path.join(__dirname, 'index.html'));
 
 http.createServer(async (req, res) => {
@@ -69,6 +70,10 @@ http.createServer(async (req, res) => {
     if (req.method === 'GET' && (url === '/' || url === '/index.html')) {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       return res.end(page);
+    }
+    if (req.method === 'GET' && (url === '/privacy' || url === '/terms')) {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      return res.end(legal[url.slice(1)]);
     }
     if (url === '/healthz') return send(res, 200, { ok: true });
     if (url === '/api/config') return send(res, 200, { clientId: CID });
