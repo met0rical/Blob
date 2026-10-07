@@ -1,7 +1,7 @@
 .git
 .gitignore
 .env
-.env.example
+stack.env
 node_modules
 README.md
 data

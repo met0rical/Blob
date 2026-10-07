@@ -7,14 +7,15 @@ A scoring app for the card game Blob, for 2 to 6 players. It tracks each player'
 1. In Portainer, go to **Stacks > Add stack** and choose **Repository**.
 2. Enter this repository's URL and the branch (for example `refs/heads/main`). For a private repo, turn on authentication and use a personal access token.
 3. Set **Compose path** to `docker-compose.yml`.
-4. Under **Environment variables**, add:
+4. Settings come from `stack.env`, which `docker-compose.yml` loads with `env_file`. Edit the values in the repository, or enter them under **Environment variables** in Portainer:
 
    | Name | Purpose |
    |---|---|
    | `GOOGLE_CLIENT_ID` | Google OAuth Web client ID (empty turns sign-in off) |
    | `ALLOWED_EMAILS` | Optional comma-separated list of allowed Google accounts |
    | `CONTACT_EMAIL` | Optional, shown on the Privacy Policy and Terms pages |
-   | `BLOB_PORT` | Optional host port (default 8082) |
+
+   The app is published on host port 8082 (`8082:3000` in `docker-compose.yml`).
 
 5. Click **Deploy the stack**. The image is built from the repository's `Dockerfile`.
 6. To update later, push to the repository, then open the stack and use **Pull and redeploy**. Portainer can also check the repository on a schedule or by webhook under **GitOps updates**.
@@ -32,7 +33,7 @@ Run the app behind HTTPS (a reverse proxy or tunnel) that forwards `X-Forwarded-
 ## Run locally
 
 ```
-cp .env.example .env   # fill in values
+# edit stack.env first
 docker compose up -d --build
 ```
 
